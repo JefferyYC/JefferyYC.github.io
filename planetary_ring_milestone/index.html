@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>
+  body {
+    padding: 100px;
+    width: 1000px;
+    margin: auto;
+    text-align: left;
+    font-weight: 300;
+    font-family: 'Open Sans', sans-serif;
+    color: #121212;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+</style>
+<title>CS 184 Final Project Milstone</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+
+<body>
+
+<h1 align="middle">CS 184: Final Project Milstone, Spring 2022</h1>
+<h2 align="middle">Kay Du, Jeffery Chen, Zhenhang Nie</h2>
+<h2 align="middle">CS184-sp22</h2>
+<a href="https://www.youtube.com/watch?v=GqSlqnvv6FU">Video</a>
+<a href="https://docs.google.com/presentation/d/15RzZmV2NaIIA_lNYM3vC0Mw82zM465OUL-C03wzPEvc/edit#slide=id.p">Slide</a>
+<br><br>
+
+<div>
+
+<h2 align="middle">Overview</h2>
+<p style="line-height:2">
+  Our goal in this project is to simulate the formation and trajectory of Saturn's rings using unity.
+  Specifically, we model the gravitational acceleration and tangent velocity applied to the dust particles that result in their circuler trajectory.
+  The collisions and gravitational attractions between dust particles are simulated with N-Body algorithm.
+</p>
+
+<h2 align="middle">Progress</h2>
+<p style="line-height:2">
+  Since the data and the units of the formulas in astrophysics are very large, it is very difficult to use the real data completely in unity. In addition, there are some data that we have no way to know, such as the mass of each particle in the planetary ring. So we applied the formulas, idealized and scaled down the data and units, and finally made the initial process in unity that the particles can orbit Saturn and form a single planetary ring
+Our code is still in a relatively naive simulation stage. Our current code right now is basically based around how to apply astrophysical formulas. Then a certain number of blobs are generated to simulate the particles on Saturn's rings. This is of course an extremely inefficient method, and we will use N-body to improve the efficiency. 
+
+</p>
+
+
+<h2 align="middle">N-Body Modeling</h2>
+<p style="line-height:2">
+  Currently we use a double loop to check collisions between every pair of dust particles. This naive collision detection method is a very inefficient and costly, with which our computer could only support around 2000 particles to form a single layer of the planetory ring. In order to generate a more realistic multi-layer ring, our next step is to implement N-body collision simulation. We make reference to “REBOUND: an open-source multi-purpose N-body code for collisional dynamics”, which proposes a structure Octree that devides particles hiearchically. Since distant particles contribute less gravitational force than those nearby, we could separate those far away particles into groups that could be approximated with the total masses and center of masses. Only the gravitational forces of those particles nearby will be calculated individually. After applying the new collision detection algorithm, we will be able to decrease the runtime from O(N^2) to O(NlogN).
+</p>
+
+<h2 align="middle">Future Plan</h2>
+<p style="line-height:2">
+  In addition to implementing Octree, we plan to expand the particle types to take account of the differences in mass and size. Shading and texture would also be added to simulate the color and texture of the Saturn.
+</p>
+
+
+
+
+
+</body>
+</html>
