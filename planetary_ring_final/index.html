@@ -11,13 +11,20 @@
     font-family: 'Open Sans', sans-serif;
     color: #121212;
   }
+
   h1, h2, h3, h4 {
     font-family: 'Source Sans Pro', sans-serif;
   }
 </style>
+
+
 <title>CS 184 Final Project Milstone</title>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
 </head>
 
 
@@ -42,24 +49,127 @@
 <br/>
 
 <h2 align="middle">Technical Approach</h2>
-<p style="line-height:2">
-blablabla
-</p>
+<h3>Problems</h3>
+<p style="line-height: 2">1) The actual Saturn ring formation process is both physically complex and not well studied. We need to extract a simple enough 
+  physics model while keeping as close to known facts as possible. Refer to the physics section on our simplified model</p>
+<p style="line-height: 2">2) During the simulation, the pairwise gravitational force between every particle needs to be calculated. 
+  A naive approach is far from sufficient in simulating large amounts of particles. Refer to the N-body simulation section on our algorithmic approach.</p>
+<p style="line-height: 2">3) The real Saturn ring consists of different layers of different particles with gaps in between, a challenging result both physically 
+  and visually to reproduce. Refer to the texture and shading section on our aesthetical approach.</p>
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/no_shade.gif" align="middle" width="400px"/>
+        <figcaption align="middle">Simulation Before Customized Texture</figcaption>
+      </td>
+      <td>
+        <img src="images/no_accelerate.gif" align="middle" width="400px"/>
+        <figcaption align="middle">Simulation Before Acceleration</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<h3>Physics</h3>
+<p style="line-height: 2">We referenced REBOUND (See reference 1) in computing the gravitational acceleration caused on each particle. The formula is: </p>
+<p style="line-height: 2">$$a_{ij} = \sum_{j=0}^{N_{active}-1}\frac{Gm_{j}}{(r_{ij}^{2}+b^{2})^{3/2}}\hat{r_{ij}}$$ </p>
+<p style="line-height: 2">We defaulted b to 0 according to the paper. We also replicated the following known data: </p>
+<p style="line-height: 2">G: 6.67 x 10<sup>-11</sup> m<sup>3</sup>kg<sup>-1</sup>s<sup>-2</sup>&nbsp;&nbsp;&nbsp;&nbsp;
+Saturn Radius: 5x10<sup>7</sup>m&nbsp;&nbsp;&nbsp;&nbsp;
+Saturn Mass: 5.683x10<sup>26</sup>kg &nbsp;&nbsp;&nbsp;&nbsp;
+Saturn Ring radius: 7x10<sup>7</sup>m </br>
+Velocity of particle on outer edge of ring: 1.64x10<sup>4</sup>m/s</p>
+<p style="line-height: 2">And made the following assumptions: </p>
+<p style="line-height: 2">Particle radius: 10<sup>6</sup>m &nbsp;&nbsp;&nbsp;&nbsp;
+Particle mass: 10<sup>18</sup>kg</p>
+<p style="line-height: 2">We scaled the units for length, mass, and time to successfully fit in Unity’s scene. We also applied a tangential initial velocity and a random offset velocity in order to simulate the formation of a circular ring of multiple layers.</p>
+
+<h3>N-body Simulation</h3>
+<p style="line-height: 2">Inspired by the Octree structure discussed in REBOUND, we developed a space partitioning algorithm to increase runtime efficiency. 
+  For each frame, we perform the following calculations: First, we divide the 3-dimensional space uniformly into cubes and hash them. 
+  Each hash key has a corresponding linked list. Second, we distribute each particle into a cube based on its transform. 
+  We store the pointer to the particle in the corresponding lined list. Third, for each particle, for the particle’s own cube, we loop over all particles within 
+  and calculate the pairwise gravitational force. For cubes within a certain distance of the target particle, we used each cube’s center of mass to calculate 
+  the gravitational force influence of that cube. For cubes that are too far away, we chose to ignore it because the gravitational force has a factor of 1/(r^2).</p>
+  <p style="line-height: 2" >
+  This optimization decreased the runtime from <math>O(N<sup>2</sup>)</math> to O(N * (P+ Q)), where P represents the average number of particles per cube and Q 
+  represents the number of neighboring cubes we decided to include. This optimization allows us to support over 2500 particles while the naive algorithm supports 
+  only less than 200. We can tune P and Q to achieve the most optimal visual and physical effect. In the end, we decided P to be 27 and Q to be 8.
+  </p>
+  <p style="line-height: 2">
+    Our approach is different from the paper we referenced, whose Octree algorithm partitions space recursively to cubes of gradient size and considers the gravitational forces from all of the cubes. Our particle is constantly moving, so building this octree every frame is a significant overhead we are concerned about. Moreover, since cubes that are too far away generate very little gravitational force, calculating every single one was simply not worth it for us. Therefore, the space partition algorithm we adopted utilizes a linear structure instead of a tree structure.
+  </p>
+
+<h3>Customized Texture and Shading</h3>
+<p style="line-height: 2">We applied textures and shadings for Saturn, meteorite, and sky box. Everything is rendered under Universal Render Pipeline/Lit shader. 
+  Lit is a very commonly used shader. It allows users to render real-world surfaces in photo-realistic quality.</p>
+<p style="line-height: 2">At the beginning of the project and even in the middle, we have been using the built-in shader which works pretty well. 
+  At a later stage, when we tried to make the trail of the meteorite with Universal Pipeline, we found that the URP shader was not compatible with the 
+  built-in shader. All the materials we made before turned into pink if we switch to the URP shader. So the only solution is to unify all materials with the 
+  URP shader.</p>
+
+<p style="line-height: 2">To create the layered effect of Saturn's ring, we customized different trail effects for different particles, depending on thie distance from Saturn.
+The first step of creating the trai effect is to create the gradient which is the color of the trail. Here we used 2 colors to make the final effect more beautiful and give our trails more adjustable.
+The second step is to give speed and time to the texture which we drew by hand with Krita, and also add some rotation to make our texture move.
+The last step is to add the disappearing and dissolving effects by using Simple Noise node and subtracting it from texture.</p>
+<div align="middle">
+  <table style="width=100%">
+  <tr>
+    <td>
+      <img src="images/trail1.png" align="middle" width="400px"/>
+      <figcaption align="middle">Defining the speed, time and rotation</figcaption>
+    </td>
+    <td>
+      <img src="images/trail2.png" align="middle" width="400px"/>
+      <figcaption align="middle">Creating dissolving effects</figcaption>
+    </td>
+  </tr>
+</table>
+</div>
+
+<h3>Lessons Learned</h3>
+<p style="line-height: 2"> 1) Unity's first attempt, including writing C# script, using Pipeline and building simple models and scenes.</p>
+<p style="line-height: 2"> 2) The formation process of Saturn's rings, including physical phenomena, physical formulas, and mathematical calculations.</p>
+<p style="line-height: 2"> 3) Researching different algorithms and realizing the algorithm from theory to practice in Unity.</p>
+
+
 
 
 <h2 align="middle">Results</h2>
 <p style="line-height:2">
-  blablabla
+  Below shows our final results seen from two different perspectives. Notice the gradual formation of different layers of Saturn's ring!
 </p>
+<div align="middle">
+  <table style="width=100%">
+  <tr>
+    <td>
+      <img src="images/result1.gif" align="middle" width="400px"/>
+      <figcaption align="middle">Final Demo 1</figcaption>
+    </td>
+    <td>
+      <img src="images/result2.gif" align="middle" width="400px"/>
+      <figcaption align="middle">Final Demo 2</figcaption>
+    </td>
+  </tr>
+</table>
+</div>
 
 <h2 align="middle">Contributions</h2>
 <p style="line-height:2">
-  blablabla
+  Zhenhang mainly focused on Saturn’s texture and ring layers’ rendering. He also built the skybox and trail.
+</p>
+<p style="line-height:2">
+  Jeffery mainly focused on researching different n body simulation algorithms and coded the final spatial partitioning algorithm used.
+<p style="line-height:2">
+  Kay worked on the physical modeling of Saturn’s gravitational field and collaborated with Jeffery to develop the space partition optimization algorithm. She also helped with Saturn’s texture and ring layers’ rendering.
 </p>
 
 <h2 align="middle">References</h2>
-
-
+<p style="line-height: 2">Texture images: <a href="www.solarsystemscope.com">www.solarsystemscope.com</a></p>
+<p style="line-height: 2">Saturn Ring formation: <a href="https://en.wikipedia.org/wiki/Rings_of_Saturn">https://en.wikipedia.org/wiki/Rings_of_Saturn</a></p>
+<p style="line-height: 2">N-body Simulation: <a href="https://www.aanda.org/articles/aa/pdf/2012/01/aa18085-11.pdf">https://www.aanda.org/articles/aa/pdf/2012/01/aa18085-11.pdf</a></p>
+<p style="line-height: 2">Algorithm Implementation:<a href="https://www.aanda.org/articles/aa/pdf/2012/01/aa18085-11.pdf">https://stackoverflow.com/questions/4324703/should-an-octree-be-rebuilt-every-frame</a> </p>
 
 
 
